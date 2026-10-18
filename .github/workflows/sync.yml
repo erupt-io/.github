@@ -1,0 +1,25 @@
+name: Sync repositories
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild the repository table
+        run: python3 scripts/sync-readme.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Commit when it changed
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add profile/README.md
+          git diff --cached --quiet || (git commit -m "chore: sync the repository list" && git push)
